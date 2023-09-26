@@ -10,9 +10,20 @@
           </div>
           <div class="modal-body">
             <div class="container-modal-content">
-              <p>Nombre: {{ pokemonSeleccionado ? capitalizeFirstLetter(pokemonSeleccionado.nombre) : '' }}</p>
-              <img :src="pokemonSeleccionado ? pokemonSeleccionado.imagen : ''" alt="Imagen del Pokémon">
+              <div class="container-imagen-poke">
+                <div class="esquina-arriba">
+                  <img :src="esquina" alt="">
+                </div>
+                <div class="imagenpoke">
+                  <img :src="pokemonSeleccionado ? pokemonSeleccionado.imagen : ''" alt="Imagen del Pokémon">
+                </div>
+                <div class="esquina-abajo">
+                  <img :src="esquina" alt="">
+                </div>
+              </div>
             </div>
+            <p>{{ pokemonSeleccionado ? capitalizeFirstLetter(pokemonSeleccionado.nombre) : '' }}</p>
+
             <div class="container-debi-type">
               <div v-if="pokemonSeleccionado">
                 <!-- Tipo -->
@@ -107,7 +118,7 @@
         </div>
       </div>
     </div>
-    <button type="button" class="btn btn-warning">Show More</button>
+    <button type="button" class="btn btn-warning" @click="mostrarmas()">Show More</button>
     <footer>
     </footer>
   </div>
@@ -119,6 +130,7 @@ import { ref, onMounted } from 'vue';
 import pokeball from '/src/assets/pokeball.png'
 import pika from '/src/assets/pika.png'
 import pokedex from '/src/assets/Pokédex.png'
+import esquina from '/src/assets/borde.png'
 
 
 let pokemons = ref([]);
@@ -132,19 +144,17 @@ async function obtenerPokemon(url) {
 
     for (let i = 0; i < r.data.types.length; i++) {
       const tipoActual = r.data.types[i].type;
-      const tipopoke = r.data.types[i].type.name.toLowerCase(); // Convertir a minúsculas
+      const tipopoke = r.data.types[i].type.name.toLowerCase(); 
 
-      // Agregar el tipo al arreglo de tipos sin importar si ya está presente
       tipos.value.push(tipoActual);
 
-      let urldebi = tipoActual.url; // Usar la URL del tipo directamente
+      let urldebi = tipoActual.url; 
 
       let debilidad = await axios.get(urldebi);
 
       for (let j = 0; j < debilidad.data.damage_relations.double_damage_from.length; j++) {
-        const debilidadActual = debilidad.data.damage_relations.double_damage_from[j].name.toLowerCase(); // Convertir a minúsculas
+        const debilidadActual = debilidad.data.damage_relations.double_damage_from[j].name.toLowerCase();
 
-        // Evitar agregar la debilidad si coincide con uno de los tipos del Pokémon
         if (debilidadActual !== tipopoke && !debilidades.value.includes(debilidadActual)) {
           debilidades.value.push(debilidadActual);
         }
@@ -212,7 +222,9 @@ let pokemonSeleccionado = ref(null);
 function seleccionarPokemon(pokemon) {
   pokemonSeleccionado.value = pokemon; 
 }
-
+function mostrarmas(){
+  link = ref('https://pokeapi.co/api/v2/pokemon?limit=50&offset=0')
+}
 onMounted(() => {
   obtenerPokemons();
 });
@@ -229,14 +241,12 @@ onMounted(() => {
   align-content: center;
   width: 100%;
 }
-
 header{
   width: 100%;
   height: 200px;
   display: flex;
   align-items: center;
 }
-
 .filtro button{
   border: none;
   height: 50px;
@@ -293,7 +303,6 @@ header{
 .pika-der{
   transform: scaleX(-1)
 }
-
 .container-cards{
   display: flex;
   justify-content: center;
@@ -339,7 +348,6 @@ header{
   flex-wrap: wrap;
 
 }
-
 .btn-tipo{
   border: none;
   height: 40px;
@@ -409,6 +417,72 @@ header{
 }
 .btn-warning{
   margin: 10px;
+}
+.container-imagen-poke{
+  height: 270px;
+  width: 270px;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid grey;
+  -webkit-box-shadow: 2px 2px 10px -3px rgba(0,0,0,0.57);
+  -moz-box-shadow: 2px 2px 10px -3px rgba(0,0,0,0.57);
+  box-shadow: 2px 2px 10px -3px rgba(0,0,0,0.57);
+}
+.imagenpoke{
+  background-color: rgba(128, 128, 128, 0.088);
+  height: 250px;
+  width: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+.imagenpoke img{
+  width: 100%;
+  height: 100%;
+}
+.esquina-arriba{
+  position: absolute;
+  top: -0.3%;
+  left: -0.3%;
+  height: 100px;
+  width: 100px;
+  z-index: 20;
+}
+.esquina-abajo{
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  transform: rotate(-180deg);
+  z-index: 50;
+  top: 14.2%;
+  left: 18.2%;
+}
+
+@media screen and (max-width: 1200px){
+ .esquina-arriba{
+  left: -0.4%;
+ }
+ .esquina-abajo{
+  left: 26%;
+ }
+}
+@media screen and (max-width: 991px){
+ .esquina-arriba{
+  left: -0.5%;
+ }
+ .esquina-abajo{
+  left: 41.1%;
+  top: 14.3%;
+
+ }
+}
+  
+.esquina-arriba img, .esquina-abajo img{
+  height: 100%;
+  width: 100%;
 }
 
 .habi{
