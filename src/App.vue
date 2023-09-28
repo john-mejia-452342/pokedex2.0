@@ -339,7 +339,6 @@ header{
   flex-wrap: wrap;
 
 }
-
 .btn-tipo{
   border: none;
   height: 40px;
