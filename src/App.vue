@@ -5,7 +5,7 @@
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">Detalles</h1>
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Detalles {{ pokemonSeleccionado ? capitalizeFirstLetter(pokemonSeleccionado.nombre) : '' }}</h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -15,26 +15,37 @@
                   <img :src="pokemonSeleccionado ? pokemonSeleccionado.imagen : ''" alt="Imagen del Pokémon">
                 </div>
               </div>
+              <div class="datos-basicos">
+                <h1>N° {{ pokemonSeleccionado ? pokemonSeleccionado.numero : ''  }}</h1>
+                <h1>{{ pokemonSeleccionado ? capitalizeFirstLetter(pokemonSeleccionado.nombre) : '' }}</h1>
+                <div class="peso-altura">
+                  <p>Peso: {{ pokemonSeleccionado ? pokemonSeleccionado.peso : '' }} Kg</p>
+                  <p>Altura: {{ pokemonSeleccionado ? pokemonSeleccionado.altura : ''  }} m</p>
+                </div>
+              </div>
             </div>
-            <p>{{ pokemonSeleccionado ? capitalizeFirstLetter(pokemonSeleccionado.nombre) : '' }}</p>
 
             <div class="container-debi-type">
-              <div v-if="pokemonSeleccionado">
+              <div v-if="pokemonSeleccionado" class="container-debilidades-type">
                 <!-- Tipo -->
                 <h1>Tipo</h1>
-                <div v-for="(tipo, i) in pokemonSeleccionado.tipos" :key="i">
-                  <button :class="['btn-tipo', getTipoClase(tipo.name).clase]">
-                    <i :class="[getTipoClase(tipo.name).icono]"></i>
-                    {{ capitalizeFirstLetter(tipo.name) }}
-                  </button>
+                <div class="container-modal-tipos">
+                  <div v-for="(tipo, i) in pokemonSeleccionado.tipos" :key="i">
+                    <button :class="['btn-tipo', getTipoClase(tipo.name).clase]">
+                      <i :class="[getTipoClase(tipo.name).icono]"></i>
+                      {{ capitalizeFirstLetter(tipo.name) }}
+                    </button>
+                  </div>
                 </div>
                 <!-- Debilidades -->
                 <h1>Debilidades</h1>
-                <div v-for="(tipo, i) in pokemonSeleccionado.debilidades" :key="i">
-                  <button :class="['btn-tipo', getTipoClase(tipo).clase]">
-                    <i :class="[getTipoClase(tipo).icono]"></i>
-                    {{ capitalizeFirstLetter(tipo) }}
-                  </button>
+                <div class="container-modal-debilidades">
+                  <div v-for="(tipo, i) in pokemonSeleccionado.debilidades" :key="i">
+                    <button :class="['btn-tipo', getTipoClase(tipo).clase]">
+                      <i :class="[getTipoClase(tipo).icono]"></i>
+                      {{ capitalizeFirstLetter(tipo) }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,18 +157,15 @@ let tiposSeleccionados = ref([])
 let mostrarSidebar = ref(false);
 let offset = ref(0);
 
-console.log(tiposSeleccionados);
-console.log(busqueda);
-
 //Obtener info de pokemons
 async function obtenerPokemon(url) {
   try {
     let r = await axios.get(url);
+    console.log(r);
 
     const tipos = ref([]);
     const debilidades = ref([]);
 
-    // Obtener los tipos del Pokémon y almacenarlos en un conjunto (Set)
     const tiposSet = new Set(r.data.types.map(tipo => tipo.type.name.toLowerCase()));
 
     for (let i = 0; i < r.data.types.length; i++) {
@@ -171,12 +179,14 @@ async function obtenerPokemon(url) {
       for (let j = 0; j < debilidad.data.damage_relations.double_damage_from.length; j++) {
         const debilidadActual = debilidad.data.damage_relations.double_damage_from[j].name.toLowerCase();
 
-        // Verificar si la debilidad no es del mismo tipo que el Pokémon
         if (!tiposSet.has(debilidadActual) && !debilidades.value.includes(debilidadActual)) {
           debilidades.value.push(debilidadActual);
         }
       }
     }
+    let peso_poke = r.data.weight/10
+    let altura_poke = r.data.height/10
+
 
     pokemons.value.push({
       imagen: r.data.sprites.other['official-artwork'].front_default,
@@ -190,11 +200,14 @@ async function obtenerPokemon(url) {
       special_attack: r.data.stats[3].base_stat,
       special_defense: r.data.stats[4].base_stat,
       speed: r.data.stats[5].base_stat,
+      peso: peso_poke,
+      altura: altura_poke,
     });
   } catch (error) {
     console.error("Error al obtener los datos de un Pokémon:", error);
   }
 }
+
 // Clases por tipo y icono 
 function getTipoClase(tipo) {
   const clasesPorTipo = {
@@ -301,16 +314,15 @@ async function filtrarPokemons() {
           for (let j = 0; j < debilidad.data.damage_relations.double_damage_from.length; j++) {
             const debilidadActual = debilidad.data.damage_relations.double_damage_from[j].name.toLowerCase();
 
-            // Verificar si la debilidad no es del mismo tipo que el Pokémon
             if (!tiposSet.has(debilidadActual) && !debilidades.value.includes(debilidadActual)) {
               debilidades.value.push(debilidadActual);
             }
           }
         }
+        let peso_poke = r.data.weight/10
+        let altura_poke = r.data.height/10
 
-      // Verifica si la respuesta contiene un Pokémon y agrégalo a la lista de filtrados.
       if (r) {
-        console.log(r.data);
         filteredPokemons.value = [{
           imagen: r.data.sprites.other['official-artwork'].front_default,
           nombre: r.data.name,
@@ -323,6 +335,8 @@ async function filtrarPokemons() {
           special_attack: r.data.stats[3].base_stat,
           special_defense: r.data.stats[4].base_stat,
           speed: r.data.stats[5].base_stat,
+          peso: peso_poke,
+          altura: altura_poke,
         }];
       } else {
         filteredPokemons.value = [];
@@ -331,6 +345,24 @@ async function filtrarPokemons() {
       console.error("Error al buscar Pokémon:", error);
       filteredPokemons.value = [];
     }
+  }
+}
+//Filtrar 
+async function filtroPokemons() {
+  const textoBusqueda = busqueda.value.toLowerCase();
+
+  if (textoBusqueda === '' && tiposSeleccionados.length === 0) {
+    // Si no se ha ingresado un término de búsqueda y no se han seleccionado tipos, muestra todos los Pokémon.
+    filteredPokemons.value = pokemons.value;
+  } else {
+    const tiposFiltrados = tiposSeleccionados.map(tipo => tipo.toLowerCase());
+    const pokemonsFiltrados = pokemons.value.filter(pokemon => {
+      const nombrePokemon = pokemon.nombre.toLowerCase();
+      const tipoPokemon = pokemon.tipos.some(tipo => tiposFiltrados.includes(tipo.type.name.toLowerCase()));
+      return nombrePokemon.includes(textoBusqueda) && tipoPokemon;
+    });
+
+    filteredPokemons.value = pokemonsFiltrados;
   }
 }
 
@@ -354,6 +386,7 @@ onMounted(async () => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@600&display=swap');
 .container{
   display: flex;
   flex-direction: column;
@@ -539,6 +572,17 @@ header{
 .btn-warning{
   margin: 10px;
 }
+.modal-body{
+  display: flex;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+}
+.container-modal-content{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
 .container-imagen-poke{
   height: 270px;
   width: 270px;
@@ -564,11 +608,44 @@ header{
   width: 100%;
   height: 100%;
 }
-
+.datos-basicos{
+  font-family: 'Kanit', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.peso-altura{
+  display: flex;
+  justify-content: space-evenly;
+  width: 250px;
+}
+.container-debi-type h1{
+  font-family: 'Kanit', sans-serif;
+ 
+}
+.container-debi-type{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.container-debilidades-type{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.container-modal-tipos, .container-modal-debilidades{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 300px;
+}
 .container-skills{
   position: relative;
+  font-family: 'Kanit', sans-serif;
   width: 340px;
-  background: rgba(0, 0, 0, .2);
+  background: rgba(255, 255, 255, 0.2);
   padding: 0 20px;
 }
 
