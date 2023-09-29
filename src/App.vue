@@ -11,14 +11,8 @@
           <div class="modal-body">
             <div class="container-modal-content">
               <div class="container-imagen-poke">
-                <div class="esquina-arriba">
-                  <img :src="esquina" alt="">
-                </div>
                 <div class="imagenpoke">
                   <img :src="pokemonSeleccionado ? pokemonSeleccionado.imagen : ''" alt="Imagen del Pokémon">
-                </div>
-                <div class="esquina-abajo">
-                  <img :src="esquina" alt="">
                 </div>
               </div>
             </div>
@@ -44,33 +38,32 @@
                 </div>
               </div>
             </div>
-            <section class="habi">
-              <h2>Stast</h2>
-              <h4>Hp:</h4>
-              <div class="contai">
-                <div class="porcen Hp">{{pokemonSeleccionado ? pokemonSeleccionado.hp : ''}}</div>
+            <div class="container-skills">
+              <div class="skill">
+                <p><span>HP</span>{{pokemonSeleccionado ? pokemonSeleccionado.hp :  ''}}</p>
+                <div class="progress" :style="{ '--wth': pokemonSeleccionado ? pokemonSeleccionado.hp + 'px' : 0 }"></div>
               </div>
-              <h4>Attack:</h4>
-              <div class="contai">
-                <div class="porcen Hp">{{pokemonSeleccionado ? pokemonSeleccionado.attack : ''}}</div>
+              <div class="skill">
+                <p><span>Attack</span>{{pokemonSeleccionado ? pokemonSeleccionado.attack : ''}}</p>
+                <div class="progress" :style="{ '--wth': pokemonSeleccionado ? pokemonSeleccionado.attack + 'px' : 0 }"></div>
               </div>
-              <h4>Defense:</h4>
-              <div class="contai">
-                <div class="porcen Hp">{{pokemonSeleccionado ? pokemonSeleccionado.defense : ''}}</div>
+              <div class="skill">
+                <p><span>Defense</span>{{pokemonSeleccionado ? pokemonSeleccionado.defense : ''}}</p>
+                <div class="progress" :style="{ '--wth': pokemonSeleccionado ? pokemonSeleccionado.defense  + 'px' : 0 }"></div>
               </div>
-              <h4>Special Attack:</h4>
-              <div class="contai">
-                <div class="porcen Hp">{{pokemonSeleccionado ? pokemonSeleccionado.special_attack : ''}}</div>
+              <div class="skill">
+                <p><span>Special Attack</span>{{pokemonSeleccionado ? pokemonSeleccionado.special_attack   : ''}}</p>
+                <div class="progress" :style="{ '--wth': pokemonSeleccionado ? pokemonSeleccionado.special_attack + 'px': 0 }"></div>
               </div>
-              <h4>Special defense:</h4>
-              <div class="contai">
-                <div class="porcen Hp">{{pokemonSeleccionado ? pokemonSeleccionado.special_defense : ''}}</div>
+              <div class="skill">
+                <p><span>Special Defense</span>{{pokemonSeleccionado ? pokemonSeleccionado.special_defense  : ''}}</p>
+                <div class="progress" :style="{ '--wth': pokemonSeleccionado ? pokemonSeleccionado.special_defense  + 'px' : 0 }"></div>
               </div>
-              <h4>Speed:</h4>
-              <div class="contai">
-                <div class="porcen Hp">{{pokemonSeleccionado ? pokemonSeleccionado.speed : ''}}</div>
+              <div class="skill">
+                <p><span>Speed</span>{{pokemonSeleccionado ? pokemonSeleccionado.speed : ''}}</p>
+                <div class="progress" :style="{ '--wth': pokemonSeleccionado ? pokemonSeleccionado.speed  + 'px': 0 }"></div>
               </div>
-            </section>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -86,13 +79,27 @@
         <img :src="pokeball" alt="" class="pokeball-izq">
       </div>
     </header>
+    <div class="sidebar" v-if="mostrarSidebar">
+      <div class="checkbox-container">
+        <button class="btn-cerrar-sidebar" @click="mostrarSidebar = false">
+          <i class="fa-solid fa-times"></i>
+        </button>
+        <label v-for="(tipo, index) in tiposDisponibles" :key="index">
+          <input type="checkbox" :value="tipo" v-model="tiposSeleccionados">
+          {{ capitalizeFirstLetter(tipo) }}
+          <i :class="['fa-solid', getTipoIcono(tipo)]"></i>
+        </label>
+      </div>
+    </div>
     <div class="busquedas">
       <div class="filtro">
-        <button type="button" class="btn btn-info"><i class="fa-solid fa-filter"></i>Filtrar</button>
+        <button type="button" class="btn btn-info" @click="funcionMostrarSidebar()">
+          <i class="fa-solid fa-filter"></i> Filtrar
+        </button>
       </div>
       <div class="input-pokemon">
-        <input type="text" placeholder="Escribe el nombre del pokemon">
-        <button type="button" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <input type="text" placeholder="Escribe el nombre o número del Pokémon" v-model="busqueda">
+        <button type="button" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"  @click="filtrarPokemons()"></i></button>
       </div>
     </div>
     <div class="pikas">
@@ -100,7 +107,7 @@
       <img :src="pika" alt="" class="pika-der">
     </div>
     <div class="container-cards">
-      <div class="card" v-for="(pokemon, index) in pokemons" :key="index">
+      <div class="card" v-for="(pokemon, index) in filteredPokemons" :key="index">
         <div class="imagen-fondo">
           <button class="btn-poke" @click="seleccionarPokemon(pokemon)" data-bs-toggle="modal" data-bs-target="#exampleModal"><img :src="pokemon.imagen" alt=""></button>
         </div>
@@ -130,36 +137,47 @@ import { ref, onMounted } from 'vue';
 import pokeball from '/src/assets/pokeball.png'
 import pika from '/src/assets/pika.png'
 import pokedex from '/src/assets/Pokédex.png'
-import esquina from '/src/assets/borde.png'
 
-
+let busqueda = ref("");
+let filteredPokemons = ref([]);
 let pokemons = ref([]);
+let pokemonSeleccionado = ref(null); 
+let tiposSeleccionados = ref([])
+let mostrarSidebar = ref(false);
+let offset = ref(0);
+
+console.log(tiposSeleccionados);
+console.log(busqueda);
+
+//Obtener info de pokemons
 async function obtenerPokemon(url) {
   try {
     let r = await axios.get(url);
-    console.log(r);
 
     const tipos = ref([]);
-    const debilidades = ref([])
+    const debilidades = ref([]);
+
+    // Obtener los tipos del Pokémon y almacenarlos en un conjunto (Set)
+    const tiposSet = new Set(r.data.types.map(tipo => tipo.type.name.toLowerCase()));
 
     for (let i = 0; i < r.data.types.length; i++) {
       const tipoActual = r.data.types[i].type;
-      const tipopoke = r.data.types[i].type.name.toLowerCase(); 
 
       tipos.value.push(tipoActual);
 
-      let urldebi = tipoActual.url; 
-
-      let debilidad = await axios.get(urldebi);
+      const urldebi = tipoActual.url;
+      const debilidad = await axios.get(urldebi);
 
       for (let j = 0; j < debilidad.data.damage_relations.double_damage_from.length; j++) {
         const debilidadActual = debilidad.data.damage_relations.double_damage_from[j].name.toLowerCase();
 
-        if (debilidadActual !== tipopoke && !debilidades.value.includes(debilidadActual)) {
+        // Verificar si la debilidad no es del mismo tipo que el Pokémon
+        if (!tiposSet.has(debilidadActual) && !debilidades.value.includes(debilidadActual)) {
           debilidades.value.push(debilidadActual);
         }
       }
     }
+
     pokemons.value.push({
       imagen: r.data.sprites.other['official-artwork'].front_default,
       nombre: r.data.name,
@@ -177,8 +195,7 @@ async function obtenerPokemon(url) {
     console.error("Error al obtener los datos de un Pokémon:", error);
   }
 }
-
-
+// Clases por tipo y icono 
 function getTipoClase(tipo) {
   const clasesPorTipo = {
     water: { clase: "tipo-agua", icono: "fa-solid fa-droplet" },
@@ -203,30 +220,134 @@ function getTipoClase(tipo) {
 
   return clasesPorTipo[tipo] || "tipo-desconocido";
 }
+//Tipos disponibles
+const tiposDisponibles = [
+  'water', 'fire', 'grass', 'electric', 'ice', 'fighting', 'poison', 'ground',
+  'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy', 'normal'
+];
+//Iconos
+function getTipoIcono(tipo) {
+  const iconosPorTipo = {
+    water: "fa-droplet",
+    fire: "fa-fire",
+    grass: "fa-leaf",
+    electric: "fa-bolt",
+    ice: "fa-snowflake",
+    fighting: "fa-fist-raised",
+    poison: "fa-skull-crossbones",
+    ground: "fa-mountain",
+    flying: "fa-dove",
+    psychic: "fa-brain",
+    bug: "fa-bug",
+    rock: "fa-gem",
+    ghost: "fa-ghost",
+    dragon: "fa-dragon",
+    dark: "fa-moon",
+    steel: "fa-shield",
+    fairy: "fa-magic",
+    normal: "fa-circle",
+  };
 
+  return iconosPorTipo[tipo] || "fa-question";
+}
+
+//Acceder a la API 50 primeros y demas pokemones
 async function obtenerPokemons() {
-  let pokemonsResponse = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=50&offset=0");
-  let pokemonUrls = pokemonsResponse.data.results.map((pokemon) => pokemon.url);
+  try {
+    let pokemonsResponse = await axios.get(`https://pokeapi.co/api/v2/pokemon?limit=50&offset=${offset.value}`);
+    let pokemonUrls = pokemonsResponse.data.results.map((pokemon) => pokemon.url);
 
-  for (const url of pokemonUrls) {
-    await obtenerPokemon(url);
+    for (const url of pokemonUrls) {
+      await obtenerPokemon(url);
+    }
+  } catch (error) {
+    console.error("Error al obtener los datos de los Pokémon:", error);
   }
 }
 
+//Primera letra en Mayuscula
 function capitalizeFirstLetter(str) {
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 }
 
-let pokemonSeleccionado = ref(null); 
+//Selecionar un pokemon para el modal
+async function seleccionarPokemon(pokemon) {
+  pokemonSeleccionado.value = pokemon;
+}
 
-function seleccionarPokemon(pokemon) {
-  pokemonSeleccionado.value = pokemon; 
+//Filtrar pokemon por nombre o numero
+async function filtrarPokemons() {
+  const textoBusqueda = busqueda.value.toLowerCase();
+
+  if (textoBusqueda === '') {
+    // Si el campo de búsqueda está vacío, muestra todos los Pokémon.
+    filteredPokemons.value = pokemons.value;
+  } else {
+    try {
+      const r = await axios.get(`https://pokeapi.co/api/v2/pokemon/${textoBusqueda}`);
+      const tipos = ref([]);
+      const debilidades = ref([])
+
+      const tiposSet = new Set(r.data.types.map(tipo => tipo.type.name.toLowerCase()));
+
+        for (let i = 0; i < r.data.types.length; i++) {
+          const tipoActual = r.data.types[i].type;
+
+          tipos.value.push(tipoActual);
+
+          const urldebi = tipoActual.url;
+          const debilidad = await axios.get(urldebi);
+
+          for (let j = 0; j < debilidad.data.damage_relations.double_damage_from.length; j++) {
+            const debilidadActual = debilidad.data.damage_relations.double_damage_from[j].name.toLowerCase();
+
+            // Verificar si la debilidad no es del mismo tipo que el Pokémon
+            if (!tiposSet.has(debilidadActual) && !debilidades.value.includes(debilidadActual)) {
+              debilidades.value.push(debilidadActual);
+            }
+          }
+        }
+
+      // Verifica si la respuesta contiene un Pokémon y agrégalo a la lista de filtrados.
+      if (r) {
+        console.log(r.data);
+        filteredPokemons.value = [{
+          imagen: r.data.sprites.other['official-artwork'].front_default,
+          nombre: r.data.name,
+          numero: r.data.id,
+          tipos: tipos,
+          debilidades: debilidades,
+          hp: r.data.stats[0].base_stat,
+          attack: r.data.stats[1].base_stat,
+          defense: r.data.stats[2].base_stat,
+          special_attack: r.data.stats[3].base_stat,
+          special_defense: r.data.stats[4].base_stat,
+          speed: r.data.stats[5].base_stat,
+        }];
+      } else {
+        filteredPokemons.value = [];
+      }
+    } catch (error) {
+      console.error("Error al buscar Pokémon:", error);
+      filteredPokemons.value = [];
+    }
+  }
 }
-function mostrarmas(){
-  link = ref('https://pokeapi.co/api/v2/pokemon?limit=50&offset=0')
+
+//Mostrar Sidebar
+async function funcionMostrarSidebar() {
+  mostrarSidebar.value = true; 
 }
-onMounted(() => {
+
+//Mostrar mas
+function mostrarmas() {
+  offset.value += 50;
   obtenerPokemons();
+}
+//Montar tan pronto se cargue
+onMounted(async () => {
+  await obtenerPokemons();
+  filtrarPokemons(); 
 });
 </script>
 
@@ -443,78 +564,59 @@ header{
   width: 100%;
   height: 100%;
 }
-.esquina-arriba{
-  position: absolute;
-  top: -0.3%;
-  left: -0.3%;
-  height: 100px;
-  width: 100px;
-  z-index: 20;
-}
-.esquina-abajo{
-  position: absolute;
-  height: 100px;
-  width: 100px;
-  transform: rotate(-180deg);
-  z-index: 50;
-  top: 14.2%;
-  left: 18.2%;
+
+.container-skills{
+  position: relative;
+  width: 340px;
+  background: rgba(0, 0, 0, .2);
+  padding: 0 20px;
 }
 
-@media screen and (max-width: 1200px){
- .esquina-arriba{
-  left: -0.4%;
- }
- .esquina-abajo{
-  left: 26%;
- }
+.container-skills .skill{
+  margin: 20px 0;
 }
-@media screen and (max-width: 991px){
- .esquina-arriba{
-  left: -0.5%;
- }
- .esquina-abajo{
-  left: 41.1%;
-  top: 14.3%;
 
- }
+.container-skills .skill p{
+  width: 300px;
+  display: flex;
+  justify-content: space-between;
 }
-  
-.esquina-arriba img, .esquina-abajo img{
+
+.container-skills .skill .progress{
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: #999;
+  border-radius:6px ;
+  overflow: hidden;
+  margin: 5px 0;
+}
+
+.container-skills .skill .progress::before{
+  content:'' ;
+  position: absolute;
+  width: var(--wth, 0px); 
   height: 100%;
-  width: 100%;
+  background: #0280fe;
 }
 
-.habi{
-  width: 600px;
-  margin: auto;
-  padding: 10px;
+.sidebar{
+  position: fixed;
+  top: 0;
+  left: 5px;
+  background-color: rgba(0, 0, 0, 0.297);
+  width: 15%;
+  height: 100vh;
+  z-index: 3000;
 }
-
-.contai{
-  width: 100%;
-  background-color: #888;
-  border-radius: 4rem;
+.checkbox-container{
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
-
-.porcen{
-  text-align: right;
-  padding: 10px;
-  color: white;
-  font-weight: 900;
-}
-
-.Hp{
-  background-color: grenn;
-  animation: hp 2s forwards;
-  border-radius:4rem ;
-}
-@keyframes hp{
-  0%{
-    width: 0;
-  }
-  100%{
-    width: 90%;
-  }
+.btn-cerrar-sidebar{
+  position: absolute;
+  right: 3px;
+  top: 3px;
 }
 </style>
