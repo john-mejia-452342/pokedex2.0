@@ -346,7 +346,8 @@ async function filtrarPokemons() {
   }
 }
 //Filtrar por tipo 
-function filtrarPokemonsType() {
+watch(()=>{
+  
   try {
     if (tiposSeleccionados.value.length === 0) {
     filteredPokemons.value = pokemons.value;
@@ -363,7 +364,9 @@ function filtrarPokemonsType() {
   } catch (error) {
     console.error("Error al buscar Pokémon:", error);
   }
-}
+
+})
+
 //Mostrar Sidebar
 async function funcionMostrarSidebar() {
   mostrarSidebar.value = true; 
@@ -373,6 +376,7 @@ function mostrarmas() {
   offset.value += 50;
   obtenerPokemons();
 }
+
 //Montar tan pronto se cargue
 onMounted(async () => {
   obtenerPokemons();
