@@ -347,7 +347,8 @@ async function filtrarPokemons() {
 }
 //Filtrar por tipo 
 function filtrarPokemonsType() {
-  if (tiposSeleccionados.value.length === 0) {
+  try {
+    if (tiposSeleccionados.value.length === 0) {
     filteredPokemons.value = pokemons.value;
   } else {
     filteredPokemons.value = pokemons.value.filter((pokemon) => {
@@ -358,6 +359,9 @@ function filtrarPokemonsType() {
       }
       return false;
     });
+  }
+  } catch (error) {
+    console.error("Error al buscar Pokémon:", error);
   }
 }
 //Mostrar Sidebar
@@ -372,8 +376,9 @@ function mostrarmas() {
 //Montar tan pronto se cargue
 onMounted(async () => {
   obtenerPokemons();
-  await filtrarPokemons(); 
-  filtrarPokemonsType()
+  await filtrarPokemons()
+  filtrarPokemonsType(); 
+ 
 });
 
 </script>
