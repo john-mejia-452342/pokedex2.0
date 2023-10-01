@@ -95,11 +95,18 @@
         <button class="btn-cerrar-sidebar" @click="mostrarSidebar = false">
           <i class="fa-solid fa-times"></i>
         </button>
-        <label v-for="(tipo, index) in tiposDisponibles" :key="index">
-          <input type="checkbox" :value="tipo" v-model="tiposSeleccionados">
-          {{ capitalizeFirstLetter(tipo) }}
-          <i :class="['fa-solid', getTipoIcono(tipo)]"></i>
-        </label>
+        <div class="container-label">
+          <label class="cyberpunk-checkbox-label"  v-for="(tipo, index) in tiposDisponibles" :key="index">
+              <input type="checkbox" class="cyberpunk-checkbox"  :value="tipo" v-model="tiposSeleccionados">
+              {{ capitalizeFirstLetter(tipo)   }}   <i :class="['fa-solid', getTipoIcono(tipo)]"></i>
+          </label>
+          
+        </div>
+        
+        <button class="btn btn-info" @click="filtrarPokemonsType()">          
+          <i class="fa-solid fa-filter"></i> Filtrar
+        </button>
+
       </div>
     </div>
     <div class="busquedas">
@@ -110,7 +117,7 @@
       </div>
       <div class="input-pokemon">
         <input type="text" placeholder="Escribe el nombre o número del Pokémon" v-model="busqueda">
-        <button type="button" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"  @click="filtrarPokemons()"></i></button>
+        <button type="button" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass" @click="filtrarPokemons()"></i></button>
       </div>
     </div>
     <div class="pikas">
@@ -144,7 +151,7 @@
 
 <script setup>
 import axios from 'axios'
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch  } from 'vue';
 import pokeball from '/src/assets/pokeball.png'
 import pika from '/src/assets/pika.png'
 import pokedex from '/src/assets/Pokédex.png'
@@ -157,12 +164,11 @@ let tiposSeleccionados = ref([])
 let mostrarSidebar = ref(false);
 let offset = ref(0);
 
+
 //Obtener info de pokemons
 async function obtenerPokemon(url) {
   try {
     let r = await axios.get(url);
-    console.log(r);
-
     const tipos = ref([]);
     const debilidades = ref([]);
 
@@ -183,11 +189,8 @@ async function obtenerPokemon(url) {
           debilidades.value.push(debilidadActual);
         }
       }
+
     }
-    let peso_poke = r.data.weight/10
-    let altura_poke = r.data.height/10
-
-
     pokemons.value.push({
       imagen: r.data.sprites.other['official-artwork'].front_default,
       nombre: r.data.name,
@@ -200,14 +203,15 @@ async function obtenerPokemon(url) {
       special_attack: r.data.stats[3].base_stat,
       special_defense: r.data.stats[4].base_stat,
       speed: r.data.stats[5].base_stat,
-      peso: peso_poke,
-      altura: altura_poke,
+      peso:r.data.weight/10,
+      altura: r.data.height/10,
     });
+    
   } catch (error) {
     console.error("Error al obtener los datos de un Pokémon:", error);
   }
+  
 }
-
 // Clases por tipo y icono 
 function getTipoClase(tipo) {
   const clasesPorTipo = {
@@ -263,7 +267,6 @@ function getTipoIcono(tipo) {
 
   return iconosPorTipo[tipo] || "fa-question";
 }
-
 //Acceder a la API 50 primeros y demas pokemones
 async function obtenerPokemons() {
   try {
@@ -277,17 +280,14 @@ async function obtenerPokemons() {
     console.error("Error al obtener los datos de los Pokémon:", error);
   }
 }
-
 //Primera letra en Mayuscula
 function capitalizeFirstLetter(str) {
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 }
-
 //Selecionar un pokemon para el modal
 async function seleccionarPokemon(pokemon) {
   pokemonSeleccionado.value = pokemon;
 }
-
 //Filtrar pokemon por nombre o numero
 async function filtrarPokemons() {
   const textoBusqueda = busqueda.value.toLowerCase();
@@ -319,9 +319,7 @@ async function filtrarPokemons() {
             }
           }
         }
-        let peso_poke = r.data.weight/10
-        let altura_poke = r.data.height/10
-
+       
       if (r) {
         filteredPokemons.value = [{
           imagen: r.data.sprites.other['official-artwork'].front_default,
@@ -335,8 +333,8 @@ async function filtrarPokemons() {
           special_attack: r.data.stats[3].base_stat,
           special_defense: r.data.stats[4].base_stat,
           speed: r.data.stats[5].base_stat,
-          peso: peso_poke,
-          altura: altura_poke,
+          peso: r.data.weight/10,
+          altura: r.data.height/10,
         }];
       } else {
         filteredPokemons.value = [];
@@ -347,30 +345,25 @@ async function filtrarPokemons() {
     }
   }
 }
-//Filtrar 
-async function filtroPokemons() {
-  const textoBusqueda = busqueda.value.toLowerCase();
-
-  if (textoBusqueda === '' && tiposSeleccionados.length === 0) {
-    // Si no se ha ingresado un término de búsqueda y no se han seleccionado tipos, muestra todos los Pokémon.
+//Filtrar por tipo 
+function filtrarPokemonsType() {
+  if (tiposSeleccionados.value.length === 0) {
     filteredPokemons.value = pokemons.value;
   } else {
-    const tiposFiltrados = tiposSeleccionados.map(tipo => tipo.toLowerCase());
-    const pokemonsFiltrados = pokemons.value.filter(pokemon => {
-      const nombrePokemon = pokemon.nombre.toLowerCase();
-      const tipoPokemon = pokemon.tipos.some(tipo => tiposFiltrados.includes(tipo.type.name.toLowerCase()));
-      return nombrePokemon.includes(textoBusqueda) && tipoPokemon;
+    filteredPokemons.value = pokemons.value.filter((pokemon) => {
+      for (const tipoSeleccionado of tiposSeleccionados.value) {
+        if (pokemon.tipos.some((tipo) => tipo.name === tipoSeleccionado)) {
+          return true;
+        }
+      }
+      return false;
     });
-
-    filteredPokemons.value = pokemonsFiltrados;
   }
 }
-
 //Mostrar Sidebar
 async function funcionMostrarSidebar() {
   mostrarSidebar.value = true; 
 }
-
 //Mostrar mas
 function mostrarmas() {
   offset.value += 50;
@@ -378,9 +371,11 @@ function mostrarmas() {
 }
 //Montar tan pronto se cargue
 onMounted(async () => {
-  await obtenerPokemons();
-  filtrarPokemons(); 
+  obtenerPokemons();
+  await filtrarPokemons(); 
+  filtrarPokemonsType()
 });
+
 </script>
 
 <style scoped>
@@ -680,20 +675,81 @@ header{
 .sidebar{
   position: fixed;
   top: 0;
-  left: 5px;
-  background-color: rgba(0, 0, 0, 0.297);
+  left: 0;
+  background-color: rgba(17, 12, 12, 0.712);
   width: 15%;
   height: 100vh;
   z-index: 3000;
+  padding-left: 5px;
 }
 .checkbox-container{
   display: flex;
   flex-direction: column;
   position: relative;
+  margin-top: 15px;
+}
+.container-label{
+  margin-top:20px ;
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.container-label label{
+  padding-top:8px;
+  font-size: 15px;
 }
 .btn-cerrar-sidebar{
   position: absolute;
   right: 3px;
-  top: 3px;
+  border: none;
+  border-radius:5px;
+  height: 30px;
+  width: 30px;
+}
+.btn-cerrar-sidebar:hover{
+  background-color: red;
+}
+.cyberpunk-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #30cfd0;
+  border-radius: 5px;
+  background-color: transparent;
+  display: inline-block;
+  position: relative;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.cyberpunk-checkbox:before {
+  content: "";
+  background-color: #30cfd0;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  transition: all 0.3s ease-in-out;
+}
+
+.cyberpunk-checkbox:checked:before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.cyberpunk-checkbox-label {
+  font-size: 18px;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+.cyberpunk-checkbox-label i{
+  margin-left: 10px;
 }
 </style>
