@@ -400,7 +400,7 @@ header{
   flex-wrap: wrap;
   position: fixed;
   top: 0;
-  z-index: 5000;
+  z-index: 50;
   background-color: white;
 }
 .filtro button{
@@ -640,6 +640,9 @@ header{
   background: rgba(255, 255, 255, 0.2);
   padding: 0 20px;
 }
+.modal{
+z-index: 10000;
+}
 
 .container-skills .skill{
   margin: 20px 0;
@@ -676,7 +679,7 @@ header{
   background-color: rgba(17, 12, 12, 0.712);
   width: 200px;
   height: 100vh;
-  z-index: 3000;
+  z-index: 30;
   padding-left: 5px;
 }
 .checkbox-container{
