@@ -84,46 +84,39 @@
     </div>
     <!-- Pokedex -->
     <header>
-      <div class="titulo">
-        <img :src="pokeball" alt="" class="pokeball-der">
-        <img :src="pokedex" alt="">
-        <img :src="pokeball" alt="" class="pokeball-izq">
+        <div class="titulo">
+          <img :src="pokeball" alt="" class="pokeball-der">
+          <a href="#">
+            <img :src="pokedex" alt="">
+          </a>
+          <img :src="pokeball" alt="" class="pokeball-izq">
+        </div>
+      
+      <div class="sidebar" v-if="mostrarSidebar">
+        <div class="checkbox-container">
+          <button class="btn-cerrar-sidebar" @click="mostrarSidebar = false">
+            <i class="fa-solid fa-times"></i>
+          </button>
+          <div class="container-label">
+            <label class="cyberpunk-checkbox-label"  v-for="(tipo, index) in tiposDisponibles" :key="index">
+                <input type="checkbox" class="cyberpunk-checkbox"  :value="tipo" v-model="tiposSeleccionados">
+                {{ capitalizeFirstLetter(tipo)   }}   <i :class="['fa-solid', getTipoIcono(tipo)]"></i>
+            </label>         
+          </div>
+        </div>
+      </div>
+      <div class="busquedas">
+        <div class="filtro">
+          <button type="button" class="btn btn-info" @click="funcionMostrarSidebar()">
+            <i class="fa-solid fa-filter"></i> Filtrar
+          </button>
+        </div>
+        <div class="input-pokemon">
+          <input type="text" placeholder=" Escribe el nombre o número del Pokémon" v-model="busqueda">
+          <button type="button" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass" @click="filtrarPokemons()"></i></button>
+        </div>
       </div>
     </header>
-    <div class="sidebar" v-if="mostrarSidebar">
-      <div class="checkbox-container">
-        <button class="btn-cerrar-sidebar" @click="mostrarSidebar = false">
-          <i class="fa-solid fa-times"></i>
-        </button>
-        <div class="container-label">
-          <label class="cyberpunk-checkbox-label"  v-for="(tipo, index) in tiposDisponibles" :key="index">
-              <input type="checkbox" class="cyberpunk-checkbox"  :value="tipo" v-model="tiposSeleccionados">
-              {{ capitalizeFirstLetter(tipo)   }}   <i :class="['fa-solid', getTipoIcono(tipo)]"></i>
-          </label>
-          
-        </div>
-        
-        <button class="btn btn-info" @click="filtrarPokemonsType()">          
-          <i class="fa-solid fa-filter"></i> Filtrar
-        </button>
-
-      </div>
-    </div>
-    <div class="busquedas">
-      <div class="filtro">
-        <button type="button" class="btn btn-info" @click="funcionMostrarSidebar()">
-          <i class="fa-solid fa-filter"></i> Filtrar
-        </button>
-      </div>
-      <div class="input-pokemon">
-        <input type="text" placeholder="Escribe el nombre o número del Pokémon" v-model="busqueda">
-        <button type="button" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass" @click="filtrarPokemons()"></i></button>
-      </div>
-    </div>
-    <div class="pikas">
-      <img :src="pika" alt="">
-      <img :src="pika" alt="" class="pika-der">
-    </div>
     <div class="container-cards">
       <div class="card" v-for="(pokemon, index) in filteredPokemons" :key="index">
         <div class="imagen-fondo">
@@ -401,9 +394,14 @@ onMounted(async () => {
 }
 header{
   width: 100%;
-  height: 200px;
+  height: 220px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  position: fixed;
+  top: 0;
+  z-index: 5000;
+  background-color: white;
 }
 .filtro button{
   border: none;
@@ -434,7 +432,7 @@ header{
   justify-content: flex-end;
 }
 .input-pokemon input{
-  width: 250px;
+  width: 320px;
   border-top-left-radius: 5px;
   border-bottom-left-radius: 5px;
   border: 1 px solid blue;
@@ -445,21 +443,10 @@ header{
 }
 .busquedas{
   display: flex;
-  width: 50%;
-  justify-content: space-evenly;
-}
-.pikas{
-  height: 120px;
   width: 100%;
-  display: flex;
-  justify-content:space-between ;
-}
-.pikas img{
-  height: 100%;
-
-}
-.pika-der{
-  transform: scaleX(-1)
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  margin-top: 10px;
 }
 .container-cards{
   display: flex;
@@ -468,6 +455,7 @@ header{
   flex-wrap: wrap;
   background-color: white;
   width: 100%;
+  padding-top: 250px;
 }
 .btn-poke {
   background: none;
@@ -517,10 +505,10 @@ header{
   margin: 10px;
 }
 .tipo-agua{
-  background-color: hsla(240, 100%, 50%, 0.501);
+  background-color: hsla(213, 100%, 50%, 0.696);
 }
 .tipo-fuego{
-  background-color: rgba(255, 166, 0, 0.497);
+  background-color: rgba(255, 89, 0, 0.497);
 }
 .tipo-planta{
   background-color: rgba(0, 128, 0, 0.504);
@@ -559,7 +547,7 @@ header{
   background-color: rgba(95, 13, 95, 0.477);
 }
 .tipo-dragon{
-  background-color: rgba(71, 5, 5, 0.505);
+  background-color: rgba(255, 0, 0, 0.505);
 }
 .tipo-siniestro{
   background-color: rgba(0, 0, 0, 0.455);
@@ -568,10 +556,10 @@ header{
   background-color: rgba(85, 107, 47, 0.453);
 }
 .tipo-hada{
-  background-color: rgba(165, 42, 42, 0.505);
+  background-color: rgba(254, 104, 104, 0.774);
 }
 .tipo-normal{
-  background-color: rgba(97, 97, 238, 0.456);
+  background-color: rgba(111, 111, 118, 0.456);
 }
 .btn-warning{
   margin: 10px;
@@ -686,7 +674,7 @@ header{
   top: 0;
   left: 0;
   background-color: rgba(17, 12, 12, 0.712);
-  width: 15%;
+  width: 200px;
   height: 100vh;
   z-index: 3000;
   padding-left: 5px;
@@ -760,5 +748,25 @@ header{
 }
 .cyberpunk-checkbox-label i{
   margin-left: 10px;
+}
+
+@media screen and (max-width: 600px) {
+  .pokeball-der, .pokeball-izq{
+    display: none;
+  }
+ 
+}
+@media screen and (max-width: 460px) {
+  .filtro button{
+    margin: 10px;
+  }
+  header{
+    height: 300px;
+  }
+  .container-cards{
+  padding-top: 320px;
+    
+  }
+ 
 }
 </style>
