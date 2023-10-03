@@ -86,7 +86,7 @@
     <header>
         <div class="titulo">
           <img :src="pokeball" alt="" class="pokeball-der">
-          <a href="#">
+          <a href="#" class="pokedex">
             <img :src="pokedex" alt="">
           </a>
           <img :src="pokeball" alt="" class="pokeball-izq">
@@ -286,7 +286,6 @@ async function filtrarPokemons() {
   const textoBusqueda = busqueda.value.toLowerCase();
 
   if (textoBusqueda === '') {
-    // Si el campo de búsqueda está vacío, muestra todos los Pokémon.
     filteredPokemons.value = pokemons.value;
   } else {
     try {
@@ -340,7 +339,6 @@ async function filtrarPokemons() {
 }
 //Filtrar por tipo 
 watch(()=>{
-  
   try {
     if (tiposSeleccionados.value.length === 0) {
     filteredPokemons.value = pokemons.value;
@@ -764,12 +762,32 @@ z-index: 10000;
     margin: 10px;
   }
   header{
-    height: 300px;
+    height: 220px;
   }
   .container-cards{
-  padding-top: 320px;
+  padding-top: 240px;
     
   }
+  .busquedas{
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+  .pokedex{
+    height: 100px;
+    width: auto;
+  }
+  .pokedex img{
+    height: 100%;
+    width: 100%;
+  }
+  .input-pokemon input{
+  width: 250px;
+
+  }
+  .filtro button{
+    font-size: 15px;
+  }
+
  
 }
 </style>
